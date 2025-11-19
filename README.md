@@ -90,8 +90,8 @@ MongoDB (local or Atlas)
 npm
 
 📌 Clone Repository
-git clone https://github.com/your-username/SkillCompass-AI.git
-cd SkillCompass-AI/backend
+git clone https://github.com/manmeetkaur18/SkillCompass_AI.git
+cd SkillCompass_AI/backend
 
 📌 Install Dependencies
 npm install

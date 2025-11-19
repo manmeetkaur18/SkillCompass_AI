@@ -1,27 +1,63 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./UploadResume.css"; // 👈 make sure this CSS file exists
+import "./UploadResume.css";
+import { api } from "../services/api";
 
 function UploadResume() {
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!file) {
-      alert("Please select a resume file to upload!");
+      alert("Please select a resume file!");
       return;
     }
 
-    // 👇 You can later connect this to your backend upload API
-    console.log("Uploaded File:", file.name);
-    alert("Resume uploaded successfully!");
-    navigate("/dashboard"); // redirects to dashboard after upload
+    try {
+      setLoading(true);
+
+      // 1️⃣ Prepare file for upload
+      const formData = new FormData();
+      formData.append("resume", file);
+
+      // 2️⃣ Upload to backend for AI extraction
+      const extractRes = await api.upload.extractResume(formData);
+
+      const extractedSkills = extractRes.data.skills;
+      if (!extractedSkills || extractedSkills.length === 0) {
+        alert("No skills detected. Try another resume.");
+        return;
+      }
+
+      // 3️⃣ Save extracted skills to DB
+      await api.user.updateSkills(extractedSkills);
+
+      // 4️⃣ Get recommendation from backend
+      const recRes = await api.recommendation.getRecommendation(extractedSkills);
+
+      // 5️⃣ Save to localStorage (Dashboard reads this)
+      localStorage.setItem("bestRole", recRes.data.bestRole);
+      localStorage.setItem("matchPercentage", recRes.data.matchPercentage);
+      localStorage.setItem("missingSkills", JSON.stringify(recRes.data.missingSkills));
+      localStorage.setItem("roadmap", JSON.stringify(recRes.data.roadmap));
+
+      // 6️⃣ Navigate to dashboard
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error("Resume upload error:", err);
+      alert("Resume processing failed. Check backend logs.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,7 +65,7 @@ function UploadResume() {
       <div className="upload-card">
         <h1>📤 Upload Your Resume</h1>
         <p className="subtitle">
-          Choose your resume file to analyze your skills and get career insights.
+          Our AI will scan your resume, extract skills, and build your personalized job path.
         </p>
 
         <form onSubmit={handleSubmit} className="upload-form">
@@ -38,7 +74,10 @@ function UploadResume() {
             accept=".pdf,.doc,.docx"
             onChange={handleFileChange}
           />
-          <button type="submit">Upload & Continue</button>
+
+          <button type="submit" disabled={loading}>
+            {loading ? "⏳ Processing..." : "Upload & Analyze"}
+          </button>
         </form>
 
         <p className="note">Supported formats: PDF, DOC, DOCX</p>

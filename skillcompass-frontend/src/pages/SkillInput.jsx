@@ -1,18 +1,51 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SkillInput.css";
+import { updateSkills, getCareerRecommendation } from "../services/api";
 
 export default function SkillInput() {
   const [skills, setSkills] = useState([]);
   const [input, setInput] = useState("");
   const [rating, setRating] = useState(3);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
 
   const addSkill = () => {
     if (input.trim()) {
-      setSkills([...skills, { name: input, rating }]);
+      setSkills([...skills, { name: input.trim(), rating }]);
       setInput("");
       setRating(3);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (skills.length === 0) {
+      alert("Add at least one skill.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1️⃣ Save skills to backend
+      await updateSkills({ skills }, token);
+
+      // 2️⃣ Get career recommendation from backend
+      const res = await getCareerRecommendation(skills, token);
+
+      // 3️⃣ Save recommendation to localStorage for Dashboard
+      localStorage.setItem("careerRecommendation", JSON.stringify(res.data));
+
+      alert("Skills analyzed successfully!");
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Skill input error:", err);
+      alert("Failed to process skills. Check backend connection.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,8 +95,8 @@ export default function SkillInput() {
         )}
       </div>
 
-      <button onClick={() => navigate("/dashboard")} className="next-btn">
-        🚀 Analyze Skills & Go to Dashboard
+      <button onClick={handleSubmit} className="next-btn" disabled={loading}>
+        {loading ? "⏳ Analyzing..." : "🚀 Analyze Skills & Go to Dashboard"}
       </button>
     </div>
   );

@@ -1,28 +1,46 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Welcome from "./pages/Welcome";
 import UploadResume from "./pages/UploadResume";
 import Dashboard from "./pages/Dashboard";
-import SkillInput from "./pages/SkillInput"; // ✅ Skill Input Page
+import SkillInput from "./pages/SkillInput";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          {/* 🏠 Landing Page */}
-          <Route path="/" element={<Welcome />} />
+      <Routes>
 
-          {/* 📤 Resume Upload Page */}
-          <Route path="/upload" element={<UploadResume />} />
+        {/* Public Routes */}
+        <Route path="/" element={<Welcome />} />
+        <Route path="/upload" element={<UploadResume />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-          {/* 📊 Dashboard Page */}
-          <Route path="/dashboard" element={<Dashboard />} />
+        {/* Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-          {/* 🧠 Skill Input Page */}
-          <Route path="/skills" element={<SkillInput />} />
-        </Routes>
-      </div>
+        <Route
+          path="/skills"
+          element={
+            <ProtectedRoute>
+              <SkillInput />
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
     </Router>
   );
 }

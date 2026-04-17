@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
 import { api } from "../services/api";
-import LogoutButton from "../components/LogoutButton";
-import { logout } from "../services/api";
+// import LogoutButton from "../components/LogoutButton";
+// import { logout } from "../services/api";
 
 export default function Dashboard() {
   const [bestRole, setBestRole] = useState("");

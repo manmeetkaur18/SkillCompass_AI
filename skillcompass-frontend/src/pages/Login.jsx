@@ -1,28 +1,40 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../services/api";
+import { loginUser } from "../services/api.js";
 
 export default function Login() {
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  async function handleLogin(e) {
-    e.preventDefault();
+async function handleLogin(e) {
+  e.preventDefault();
 
-    try {
-      const res = await loginUser({ email, password });
-      const token = res.data.token;
+  try {
+    const res = await loginUser({ email, password });
 
-      localStorage.setItem("token", token);
+    console.log("LOGIN RESPONSE:", res.data); // 🔥 ADD THIS
 
-      alert("Login successful!");
-      navigate("/dashboard");
+    const token = res.data.token;
 
-    } catch (error) {
-      alert(error.response?.data?.message || "Login failed");
+    if (!token) {
+      alert("Token not received!");
+      return;
     }
+
+    localStorage.setItem("token", token);
+
+    console.log("TOKEN AFTER SAVE:", localStorage.getItem("token")); // 🔥 ADD THIS
+
+    alert("Login successful!");
+    navigate("/dashboard");
+
+  } catch (error) {
+    console.error(error);
+    alert(error.response?.data?.message || "Login failed");
   }
+}
 
   return (
     <div className="upload-page">

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./SkillInput.css";
 import { updateSkills, getCareerRecommendation } from "../services/api";
 
 export default function SkillInput() {
@@ -8,10 +7,11 @@ export default function SkillInput() {
   const [input, setInput] = useState("");
   const [rating, setRating] = useState(3);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // ➕ Add skill
   const addSkill = () => {
     if (input.trim()) {
       setSkills([...skills, { name: input.trim(), rating }]);
@@ -20,52 +20,53 @@ export default function SkillInput() {
     }
   };
 
+  // 🚀 Submit skills
   const handleSubmit = async () => {
     if (skills.length === 0) {
-      alert("Add at least one skill.");
+      alert("Add at least one skill");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1️⃣ Save skills to backend
+      // 1. Save skills
       await updateSkills({ skills }, token);
 
-      // 2️⃣ Get career recommendation from backend
+      // 2. Get recommendation
       const res = await getCareerRecommendation(skills, token);
 
-      // 3️⃣ Save recommendation to localStorage for Dashboard
-      localStorage.setItem("careerRecommendation", JSON.stringify(res.data));
+      // 3. Store in localStorage
+      localStorage.setItem(
+        "careerRecommendation",
+        JSON.stringify(res.data)
+      );
 
       alert("Skills analyzed successfully!");
 
+      // 4. Navigate to dashboard
       navigate("/dashboard");
-    } catch (err) {
-      console.error("Skill input error:", err);
-      alert("Failed to process skills. Check backend connection.");
+    } catch (error) {
+      console.error(error);
+      alert("Error processing skills");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="skill-page">
+    <div style={{ padding: "20px" }}>
       <h1>🧠 Add Your Skills</h1>
-      <p>
-        Enter your current tech skills and rate your proficiency to help the AI
-        personalize your career path.
-      </p>
 
-      <div className="skill-card">
-        <input
-          type="text"
-          placeholder="e.g. React, Python, Node.js"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
+      <input
+        type="text"
+        placeholder="e.g. React, Python"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
 
-        <label>Skill Rating: {rating}/5</label>
+      <div>
+        <label>Rating: {rating}/5</label>
         <input
           type="range"
           min="1"
@@ -73,30 +74,21 @@ export default function SkillInput() {
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}
         />
-
-        <button onClick={addSkill} className="add-skill-btn">
-          ➕ Add Skill
-        </button>
       </div>
 
-      <div className="skills-list">
-        <h2>📋 Your Skills</h2>
-        {skills.length === 0 ? (
-          <p>No skills added yet.</p>
-        ) : (
-          <ul>
-            {skills.map((skill, index) => (
-              <li key={index}>
-                <span>{skill.name}</span>
-                <span>⭐ {skill.rating}/5</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <button onClick={addSkill}>➕ Add Skill</button>
 
-      <button onClick={handleSubmit} className="next-btn" disabled={loading}>
-        {loading ? "⏳ Analyzing..." : "🚀 Analyze Skills & Go to Dashboard"}
+      <h3>Your Skills:</h3>
+      <ul>
+        {skills.map((skill, index) => (
+          <li key={index}>
+            {skill.name} ⭐ {skill.rating}
+          </li>
+        ))}
+      </ul>
+
+      <button onClick={handleSubmit} disabled={loading}>
+        {loading ? "⏳ Processing..." : "🚀 Submit"}
       </button>
     </div>
   );

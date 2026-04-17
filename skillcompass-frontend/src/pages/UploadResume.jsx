@@ -4,6 +4,7 @@ import "./UploadResume.css";
 import { api } from "../services/api";
 
 function UploadResume() {
+  const token = localStorage.getItem("token");
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +30,12 @@ function UploadResume() {
       formData.append("resume", file);
 
       // 2️⃣ Upload to backend for AI extraction
-      const extractRes = await api.upload.extractResume(formData);
+      // const extractRes = await api.upload.extractResume(formData);
+      const extractRes = await api.post("/resume/upload", formData, {
+  headers: {
+    "Content-Type": "multipart/form-data",
+  },
+});
 
       const extractedSkills = extractRes.data.skills;
       if (!extractedSkills || extractedSkills.length === 0) {
@@ -38,10 +44,12 @@ function UploadResume() {
       }
 
       // 3️⃣ Save extracted skills to DB
-      await api.user.updateSkills(extractedSkills);
+      await api.post("/user/skills", { skills: extractedSkills });
 
       // 4️⃣ Get recommendation from backend
-      const recRes = await api.recommendation.getRecommendation(extractedSkills);
+     const recRes = await api.post("/skills/recommendation", {
+  skills: extractedSkills,
+});
 
       // 5️⃣ Save to localStorage (Dashboard reads this)
       localStorage.setItem("bestRole", recRes.data.bestRole);
